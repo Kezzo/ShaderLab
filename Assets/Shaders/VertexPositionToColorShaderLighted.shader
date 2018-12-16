@@ -1,11 +1,16 @@
 ﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 
-Shader "Custom/VertexPositionToColorShader"
+Shader "Custom/VertexPositionToColorShaderLighted"
 {
     SubShader
     {
         Pass
         {
+            Tags
+            {
+                "LightMode" = "ForwardBase"
+            }
+        
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -28,15 +33,14 @@ Shader "Custom/VertexPositionToColorShader"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.normal = v.normal;
+                // calculate normals into worldspace
+                o.normal = mul(v.normal, (float3x3) unity_WorldToObject);
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                float3 normal = normalize(i.normal);
-                float3 color = (normal + 1) * 0.5;
-                return fixed4(color.rgb, 0);
+                return saturate(dot(i.normal, _WorldSpaceLightPos0));
             }
             ENDCG
         }
